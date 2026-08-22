@@ -1,75 +1,37 @@
-# ZenithProxy Example Plugin
+# ZenithProxy SSH Server
 
-[ZenithProxy](https://github.com/rfresh2/ZenithProxy) is a Minecraft proxy and bot.
+Runs an SSH server, allowing you to connect a terminal to a ZenithProxy instance.
 
-This repository is an example core plugin for ZenithProxy, allowing you to add custom modules and commands.
+**Requires ZenithProxy >=3.5.9**
 
-## Installing Plugins
+Commands and logs appear exactly as if you ran ZenithProxy from a terminal.
 
-Plugins are only supported on the `java` ZenithProxy release channel (i.e. not `linux`).
+This plugin can be useful if the ZenithProxy app is running headlessly.
 
-Place plugin jars in the `plugins` folder inside the same folder as the ZenithProxy launcher.
+For example, if it is run by a systemd service, docker container, etc
 
-Restart ZenithProxy to load plugins. Loading plugins after launch or hot reloading is not supported.
 
-## Creating Plugins
+## Commands
 
-Use this repository as a template to create your own plugin repository.
+* `ssh on/off` - Default: ON
+* `ssh port <port>` - Default: 8022
+  * if you have multiple ZenithProxy instances with this plugin, you will have to assign each a unique port
+* `ssh bind <local/public>` - Default: public
+  * local = no-one on the public internet can connect
+* `ssh bind <address>` - advanced version of above bind
+* `ssh password <password>` - Default: auto-generated, see log or command output
 
-### Plugin Structure
 
-Each plugin needs a main class that implements `ZenithProxyPlugin` and is annotated with `@Plugin`.
+## Usage
 
-Plugin metadata like its unique id, version, and supported MC versions is defined in the `@Plugin` annotation.
+in a terminal: `ssh ssh://<username>@<host>:<port>`
 
-[See example](https://github.com/rfresh2/ZenithProxyExamplePlugin/blob/1.21.4/src/main/java/org/example/ExamplePlugin.java)
+* `<username>` -> can be anything (doesn't matter)
+* `<host>` -> IP address of the server. If connecting from the same PC, use `localhost`
+* `<port>` -> ssh server port
 
-### Plugin API
+Full example: `ssh ssh://z@127.0.0.1:8022`
 
-The `ZenithProxyPlugin` interface requires you to implement an `onLoad` method.
+It will then prompt you to enter the password. Type it in and press enter. 
 
-This method provides a `PluginAPI` object that you can use to register modules, commands, and config files.
-
-`Module` and `Command` classes are implemented the same as in the ZenithProxy source code.
-
-I recommend looking at existing modules, commands, and plugins for examples.
-
-* [Module](https://github.com/rfresh2/ZenithProxy/tree/1.21.4/src/main/java/com/zenith/module)
-* [Command](https://github.com/rfresh2/ZenithProxy/tree/1.21.4/src/main/java/com/zenith/command)
-* Plugins
-  * [ZenithProxyVillagerTrader](https://github.com/rfresh2/ZenithProxyVillagerTrader)
-  * [ZenithProxyWebAPI](https://github.com/rfresh2/ZenithProxyWebAPI)
-  * [ZenithProxyChatControl](https://github.com/rfresh2/ZenithProxyChatControl)
-  * More in [my discord server](https://discord.com/channels/1127460556710883391/1369081651564515358)
-
-### JavaDocs
-
-https://maven.2b2t.vc/javadoc/releases/com/zenith/ZenithProxy/1.21.4-SNAPSHOT
-
-### Building Plugins
-
-Execute the Gradle `build` task: `./gradlew build` - or double-click the task in Intellij
-
-The built plugin jar will be in the `build/libs` directory.
-
-### Testing Plugins
-
-Execute the `run` task: `./gradlew run` - or double-click the task in Intellij
-
-This will run ZenithProxy with your plugin loaded in the `run` directory.
-
-### New Plugin Checklist
-
-1. Edit `gradle.properties`:
-   - `plugin_name` - Name of your plugin, shown to users and in the plugin jar file name (e.g. `ExamplePlugin`)
-   - `plugin_id` - Unique identifier for your plugin (e.g. `example-plugin`)
-     - Must start with a lowercase letter and contain only lowercase letters, numbers, or dashes (`-`)
-   - `mc` - MC version of ZenithProxy your plugin is compiled for (e.g. `1.21.4`)
-   - `maven_group` - Java package for your project (e.g. `com.github.rfresh2`)
-1. Move files to your new corresponding package / maven group:
-   - Example: `src/main/java/org/example` -> `src/main/java/com/github/rfresh2`
-   - First create the new package in `src/main/java`. Then click and drag original subpackages/classes to your new one
-   - Do this with Intellij to avoid manually editing all the source files
-   - You must also create and move package folders for the `src/main/templates` folder
-1. Edit `ExamplePlugin.java`, or remove it and create a new main class
-   - Make sure to update the `@Plugin` annotation
+SSH will not reveal the password text as you type for security reasons

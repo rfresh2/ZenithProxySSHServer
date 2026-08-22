@@ -22,9 +22,9 @@ zenithProxyPlugin {
 }
 
 repositories {
-//    maven("https://maven.2b2t.vc/snapshots") {
-//        description = "ZenithProxy Prereleases"
-//    }
+    maven("https://maven.2b2t.vc/snapshots") {
+        description = "ZenithProxy Prereleases"
+    }
     maven("https://maven.2b2t.vc/releases") {
         description = "ZenithProxy Releases"
     }
@@ -35,9 +35,19 @@ repositories {
 
 dependencies {
     zenithProxy("com.zenith:ZenithProxy:$mc-SNAPSHOT")
-
-    /** to include dependencies into your plugin jar **/
-//    shade("com.github.ben-manes.caffeine:caffeine:3.2.0")
+    shade("org.jline:jline-remote-ssh:4.3.1") {
+        isTransitive = false
+    }
+    val sshdVersion = "2.19.0"
+    shade("org.apache.sshd:sshd-core:$sshdVersion") {
+        isTransitive = false
+    }
+    shade("org.apache.sshd:sshd-common:$sshdVersion") {
+        isTransitive = false
+    }
+    shade("org.apache.sshd:sshd-netty:$sshdVersion") {
+        isTransitive = false
+    }
 }
 
 tasks {
@@ -48,16 +58,18 @@ tasks {
          * build and examine your plugin jar contents to check
          * https://gradleup.com/shadow/configuration/relocation/
          */
-//        val basePackage = "${project.group}.shadow"
-//        relocate("com.github.benmanes.caffeine", "$basePackage.caffeine")
+        val basePackage = "${project.group}.shadow"
+//        relocate("org.apache", "$basePackage.org.apache")
+        relocate("org.jline.builtins.ssh", "$basePackage.org.jline.builtins.ssh")
+        exclude("META-INF/jline/**", "META-INF/maven/**", "META-INF/services/org.jline**", "META-INF/services/reactor**")
 
         /**
          * remove unneeded transitive dependencies
          * https://gradleup.com/shadow/configuration/dependencies/#filtering-dependencies
          */
-//        dependencies {
-//            exclude(dependency(":error_prone_annotations:.*"))
-//            exclude(dependency(":jspecify:.*"))
-//        }
+        dependencies {
+            exclude(dependency("org.slf4j:.*:.*"))
+            exclude(dependency("io.netty:.*:.*"))
+        }
     }
 }
