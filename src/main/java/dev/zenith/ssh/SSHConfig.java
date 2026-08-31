@@ -8,4 +8,6 @@ public class SSHConfig {
     public String bindAddress = "127.0.0.1";
     public boolean passwordAuthEnabled = true;
     public String password = UUID.randomUUID().toString();
+    public boolean rateLimiter = true;
+    public int rateLimitLoginsPerMinute = 30;
 }

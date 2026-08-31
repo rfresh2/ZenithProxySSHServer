@@ -25,7 +25,17 @@ public class SSHCommand extends Command {
             .name("ssh")
             .category(CommandCategory.MANAGE)
             .description("""
-                Configures the SSH server
+                Configures the SSH server.
+                
+                **Usage:**
+                
+                in a terminal: `ssh ssh://<username>@<host>:<port>`
+                
+                * `<username>` -> can be anything, or the host's OS user for public key authentication
+                * `<host>` -> IP address of the server. If connecting from the same PC, use `127.0.0.1` or `localhost`
+                * `<port>` -> ssh server port
+                
+                Full example: `ssh ssh://z@127.0.0.1:8022`
                 """)
             .usageLines(
                 "on/off",
@@ -33,7 +43,9 @@ public class SSHCommand extends Command {
                 "bind <local/public>",
                 "bind <address>",
                 "password on/off",
-                "password set <password>"
+                "password set <password>",
+                "password rateLimiter on/off",
+                "password rateLimiter requestsPerMinute <requestCount>"
             )
             .build();
     }
@@ -86,15 +98,26 @@ public class SSHCommand extends Command {
                     PLUGIN_CONFIG.passwordAuthEnabled = getToggle(c, "toggle");
                     c.getSource().getEmbed()
                         .title("Password Auth " + toggleStrCaps(PLUGIN_CONFIG.passwordAuthEnabled));
-                    restartSshServer();
                 }))
                 .then(literal("set").then(argument("password", wordWithChars()).executes(c -> {
                     PLUGIN_CONFIG.password = getString(c, "password");
                     c.getSource().getEmbed()
                         .title("Password Set");
                     c.getSource().setSensitiveInput(true);
-                    restartSshServer();
-                }))));
+                })))
+                .then(literal("rateLimiter")
+                    .then(argument("toggle", toggle()).executes(c -> {
+                        PLUGIN_CONFIG.rateLimiter = getToggle(c, "toggle");
+                        c.getSource().getEmbed()
+                            .title("Rate Limiter " + toggleStrCaps(PLUGIN_CONFIG.rateLimiter));
+                    }))
+                    .then(literal("requestsPerMinute").then(argument("requestsPerMinute", integer(1, 10000)).executes(c -> {
+                        PLUGIN_CONFIG.rateLimitLoginsPerMinute = getInteger(c, "requestsPerMinute");
+                        c.getSource().getEmbed()
+                            .title("Rate Limiter Requests Per Minute Set");
+                    })))
+                )
+            );
     }
 
     @Override
@@ -111,7 +134,10 @@ public class SSHCommand extends Command {
             .addField("Password Auth", toggleStr(PLUGIN_CONFIG.passwordAuthEnabled))
             .primaryColor();
         if (PLUGIN_CONFIG.passwordAuthEnabled) {
-            ctx.getEmbed().addField("Password", PLUGIN_CONFIG.password);
+            ctx.getEmbed()
+                .addField("Password", PLUGIN_CONFIG.password)
+                .addField("Password Rate Limiter", toggleStr(PLUGIN_CONFIG.rateLimiter))
+                .addField("Password Rate Limiter Requests Per Minute", PLUGIN_CONFIG.rateLimitLoginsPerMinute);
         }
     }
 

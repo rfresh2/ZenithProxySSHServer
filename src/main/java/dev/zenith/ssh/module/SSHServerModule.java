@@ -1,6 +1,8 @@
 package dev.zenith.ssh.module;
 
 import com.github.rfresh2.EventConsumer;
+import com.google.common.cache.Cache;
+import com.google.common.cache.CacheBuilder;
 import com.zenith.command.api.CommandContext;
 import com.zenith.command.api.CommandOutputHelper;
 import com.zenith.command.api.CommandSources;
@@ -18,10 +20,13 @@ import org.jline.reader.LineReaderBuilder;
 import org.jline.reader.UserInterruptException;
 import org.jline.terminal.Terminal;
 
+import java.net.InetSocketAddress;
 import java.nio.file.Path;
 import java.util.List;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.TimeUnit;
 
 import static com.zenith.Globals.*;
 import static dev.zenith.ssh.SSHPlugin.PLUGIN_CONFIG;
@@ -29,6 +34,9 @@ import static dev.zenith.ssh.SSHPlugin.PLUGIN_CONFIG;
 public class SSHServerModule extends Module {
     private SshServer sshServer;
     private final Set<SSHClientSession> activeSessions = ConcurrentHashMap.newKeySet();
+    private final Cache<String, Integer> rateLimitCache = CacheBuilder.newBuilder()
+        .expireAfterWrite(1, TimeUnit.MINUTES)
+        .build();
 
     record SSHClientSession(ServerSession connection, LineReader lineReader) {
         void close() {
@@ -107,6 +115,25 @@ public class SSHServerModule extends Module {
         server.setHost(PLUGIN_CONFIG.bindAddress);
         server.setPasswordAuthenticator((username, password, session) -> {
             if (!PLUGIN_CONFIG.passwordAuthEnabled) return false;
+            if (PLUGIN_CONFIG.rateLimiter) {
+                var remoteAddress = session.getRemoteAddress();
+                if (remoteAddress instanceof InetSocketAddress addr) {
+                    var ip = addr.getAddress().getHostAddress();
+                    synchronized (this) {
+                        int reqCount = 0;
+                        try {
+                            reqCount = rateLimitCache.get(ip, () -> 0);
+                        } catch (ExecutionException e) {
+                            throw new RuntimeException(e);
+                        }
+                        rateLimitCache.put(ip, reqCount + 1);
+                        if (reqCount >= PLUGIN_CONFIG.rateLimitLoginsPerMinute) {
+                            warn("Rate limit exceeded for IP: {}. Disconnecting.", ip);
+                            return false;
+                        }
+                    }
+                }
+            }
             return PLUGIN_CONFIG.password.equals(password);
         });
         var keyProvider = new SimpleGeneratorHostKeyProvider();
@@ -145,7 +172,7 @@ public class SSHServerModule extends Module {
             }
         }));
         server.start();
-        info("SSH server started: {}:{} with password: {}", server.getHost(), server.getPort(), PLUGIN_CONFIG.password);
+        info("SSH server started: {}:{} with password: {}", server.getHost(), server.getPort(), PLUGIN_CONFIG.passwordAuthEnabled ? PLUGIN_CONFIG.password : "(disabled)");
         return server;
     }
 

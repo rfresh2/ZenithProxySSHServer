@@ -2,7 +2,7 @@
 
 Runs an SSH server, allowing you to connect a terminal to a ZenithProxy instance.
 
-**Requires ZenithProxy >=3.5.9**
+**Requires ZenithProxy >=3.6.0**
 
 Commands and logs appear exactly as if you ran ZenithProxy from a terminal.
 
@@ -21,6 +21,8 @@ For example, if it is run by a systemd service, docker container, etc
 * `ssh bind <address>` - advanced version of above bind
 * `ssh password on/off` - toggles if password authentication is enabled
 * `ssh password set <password>` - Default: auto-generated, see log or command output
+* `ssh password rateLimiter on/off` - limits the number of password attempts per ip per minute
+* `ssh password rateLimiter requestsPerMinute <requestCount>` - Default: 30
 
 
 ## Usage
