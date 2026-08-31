@@ -15,9 +15,10 @@ For example, if it is run by a systemd service, docker container, etc
 
 * `ssh on/off` - Default: ON
 * `ssh port <port>` - Default: 8022
-  * if you have multiple ZenithProxy instances with this plugin, you will have to assign each a unique port
-* `ssh bind <local/public>` - Default: public
+  * if you have multiple ZenithProxy instances, assign each a unique port
+* `ssh bind <local/public>` - Default: local
   * local = no-one on the public internet can connect
+  * public = anyone on the public internet can connect (if your firewall rules allow)
 * `ssh bind <address>` - advanced version of above bind
 * `ssh password on/off` - toggles if password authentication is enabled
 * `ssh password set <password>` - Default: auto-generated, see log or command output
@@ -39,12 +40,12 @@ Full example: `ssh ssh://z@127.0.0.1:8022`
 
 It will then prompt you to enter the password. Type it in and press enter. 
 
-SSH will not reveal the password text as you type for security reasons
+SSH does not reveal the password text as you type for security reasons
 
 ### Public Key Authentication
 
 The host's SSH `authorized_keys` file must contain the public key of the client connecting.
 
-on linux this would be `~/.ssh/authorized_keys`
+on linux this would be at `~/.ssh/authorized_keys`
 
 If a matching key is found, it will log you in immediately. Otherwise, it will fall back to password authentication
