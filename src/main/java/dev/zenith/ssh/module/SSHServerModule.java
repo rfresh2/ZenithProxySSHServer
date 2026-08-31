@@ -106,6 +106,7 @@ public class SSHServerModule extends Module {
         server.setPort(PLUGIN_CONFIG.port);
         server.setHost(PLUGIN_CONFIG.bindAddress);
         server.setPasswordAuthenticator((username, password, session) -> {
+            if (!PLUGIN_CONFIG.passwordAuthEnabled) return false;
             return PLUGIN_CONFIG.password.equals(password);
         });
         var keyProvider = new SimpleGeneratorHostKeyProvider();

@@ -1,7 +1,6 @@
 package dev.zenith.ssh.command;
 
 import com.mojang.brigadier.builder.LiteralArgumentBuilder;
-import com.zenith.Globals;
 import com.zenith.command.api.Command;
 import com.zenith.command.api.CommandCategory;
 import com.zenith.command.api.CommandContext;
@@ -13,6 +12,7 @@ import java.net.InetAddress;
 import static com.mojang.brigadier.arguments.IntegerArgumentType.getInteger;
 import static com.mojang.brigadier.arguments.IntegerArgumentType.integer;
 import static com.mojang.brigadier.arguments.StringArgumentType.getString;
+import static com.zenith.Globals.MODULE;
 import static com.zenith.command.brigadier.CustomStringArgumentType.wordWithChars;
 import static com.zenith.command.brigadier.ToggleArgumentType.getToggle;
 import static com.zenith.command.brigadier.ToggleArgumentType.toggle;
@@ -32,7 +32,8 @@ public class SSHCommand extends Command {
                 "port <port>",
                 "bind <local/public>",
                 "bind <address>",
-                "password <password>"
+                "password on/off",
+                "password set <password>"
             )
             .build();
     }
@@ -44,8 +45,8 @@ public class SSHCommand extends Command {
                 PLUGIN_CONFIG.enabled = getToggle(c, "toggle");
                 c.getSource().getEmbed()
                     .title("Server " + toggleStrCaps(PLUGIN_CONFIG.enabled));
-                Globals.MODULE.get(SSHServerModule.class).disable();
-                Globals.MODULE.get(SSHServerModule.class).syncEnabledFromConfig();
+                MODULE.get(SSHServerModule.class).disable();
+                MODULE.get(SSHServerModule.class).syncEnabledFromConfig();
             }))
             .then(literal("port").then(argument("port", integer(1, 65535)).executes(c -> {
                 PLUGIN_CONFIG.port = getInteger(c, "toggle");
@@ -80,13 +81,20 @@ public class SSHCommand extends Command {
                     restartSshServer();
                     return OK;
                 })))
-            .then(literal("password").then(argument("password", wordWithChars()).executes(c -> {
-                PLUGIN_CONFIG.password = getString(c, "password");
-                c.getSource().getEmbed()
-                    .title("Password Set");
-                c.getSource().setSensitiveInput(true);
-                restartSshServer();
-            })));
+            .then(literal("password")
+                .then(argument("toggle", toggle()).executes(c -> {
+                    PLUGIN_CONFIG.passwordAuthEnabled = getToggle(c, "toggle");
+                    c.getSource().getEmbed()
+                        .title("Password Auth " + toggleStrCaps(PLUGIN_CONFIG.passwordAuthEnabled));
+                    restartSshServer();
+                }))
+                .then(literal("set").then(argument("password", wordWithChars()).executes(c -> {
+                    PLUGIN_CONFIG.password = getString(c, "password");
+                    c.getSource().getEmbed()
+                        .title("Password Set");
+                    c.getSource().setSensitiveInput(true);
+                    restartSshServer();
+                }))));
     }
 
     @Override
@@ -94,13 +102,21 @@ public class SSHCommand extends Command {
         ctx.getEmbed()
             .addField("SSH Server", toggleStr(PLUGIN_CONFIG.enabled))
             .addField("Port", PLUGIN_CONFIG.port)
-            .addField("Bind Address", PLUGIN_CONFIG.bindAddress)
-            .addField("Password", PLUGIN_CONFIG.password)
+            .addField("Bind Address", PLUGIN_CONFIG.bindAddress + (PLUGIN_CONFIG.bindAddress.equals("0.0.0.0")
+                ? " (public)"
+                : PLUGIN_CONFIG.bindAddress.equals("127.0.0.1")
+                    ? " (local)"
+                    : ""
+            ))
+            .addField("Password Auth", toggleStr(PLUGIN_CONFIG.passwordAuthEnabled))
             .primaryColor();
+        if (PLUGIN_CONFIG.passwordAuthEnabled) {
+            ctx.getEmbed().addField("Password", PLUGIN_CONFIG.password);
+        }
     }
 
     private void restartSshServer() {
-        Globals.MODULE.get(SSHServerModule.class).disable();
-        Globals.MODULE.get(SSHServerModule.class).enable();
+        MODULE.get(SSHServerModule.class).disable();
+        MODULE.get(SSHServerModule.class).enable();
     }
 }

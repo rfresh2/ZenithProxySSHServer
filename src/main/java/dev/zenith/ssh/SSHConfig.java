@@ -6,5 +6,6 @@ public class SSHConfig {
     public boolean enabled = true;
     public int port = 8022;
     public String bindAddress = "127.0.0.1";
+    public boolean passwordAuthEnabled = true;
     public String password = UUID.randomUUID().toString();
 }
