@@ -22,9 +22,9 @@ zenithProxyPlugin {
 }
 
 repositories {
-    maven("https://maven.2b2t.vc/snapshots") {
-        description = "ZenithProxy Prereleases"
-    }
+//    maven("https://maven.2b2t.vc/snapshots") {
+//        description = "ZenithProxy Prereleases"
+//    }
     maven("https://maven.2b2t.vc/releases") {
         description = "ZenithProxy Releases"
     }
@@ -35,7 +35,7 @@ repositories {
 
 dependencies {
     zenithProxy("com.zenith:ZenithProxy:$mc-SNAPSHOT")
-    shade("org.jline:jline-remote-ssh:4.3.1") {
+    shade("org.jline:jline-remote-ssh:4.4.0") {
         isTransitive = false
     }
     val sshdVersion = "2.19.0"
