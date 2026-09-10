@@ -1,5 +1,5 @@
 plugins {
-    id("zenithproxy.plugin.dev") version "1.0.1-SNAPSHOT"
+    id("zenithproxy.plugin.dev") version "1.1.+"
 }
 
 group = property("maven_group") as String
@@ -35,9 +35,6 @@ repositories {
 
 dependencies {
     zenithProxy("com.zenith:ZenithProxy:$mc-SNAPSHOT")
-    shade("org.jline:jline-remote-ssh:4.4.0") {
-        isTransitive = false
-    }
     val sshdVersion = "2.19.0"
     shade("org.apache.sshd:sshd-core:$sshdVersion") {
         isTransitive = false
@@ -58,10 +55,8 @@ tasks {
          * build and examine your plugin jar contents to check
          * https://gradleup.com/shadow/configuration/relocation/
          */
-        val basePackage = "${project.group}.shadow"
+//        val basePackage = "${project.group}.shadow"
 //        relocate("org.apache", "$basePackage.org.apache")
-        relocate("org.jline.builtins.ssh", "$basePackage.org.jline.builtins.ssh")
-        exclude("META-INF/jline/**", "META-INF/maven/**", "META-INF/services/org.jline**", "META-INF/services/reactor**")
 
         /**
          * remove unneeded transitive dependencies

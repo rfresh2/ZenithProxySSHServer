@@ -2,7 +2,7 @@
 
 Runs an SSH server, allowing you to connect a terminal to a ZenithProxy instance.
 
-**Requires ZenithProxy >=3.6.0**
+**Requires ZenithProxy >=3.7.0**
 
 Commands and logs appear exactly as if you ran ZenithProxy from a terminal.
 
